@@ -10,7 +10,7 @@ y = exp_a / sum_exp_a
 
 
 def softmax(x):
-    _exp = np.exp(a)
+    _exp = np.exp(x)
     return _exp / np.sum(_exp)
 
 

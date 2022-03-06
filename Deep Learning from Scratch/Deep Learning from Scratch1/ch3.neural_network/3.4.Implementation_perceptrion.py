@@ -73,7 +73,7 @@ class perceptron:
     def identity_function(self, x):
         return x 
         
-    def fit(self, x):
+    def predict(self, x):
         w1, w2, w3 = self.w1, self.w2, self.w3 
         b1, b2, b3 = self.b1, self.b2, self.b3 
         
