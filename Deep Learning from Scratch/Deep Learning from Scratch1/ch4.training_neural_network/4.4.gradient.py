@@ -76,3 +76,22 @@ class simpleNet:
 net = simpleNet()
 print(net.w)
 
+x = np.array([0.6, 0.9])
+p = net.predict(x)
+
+print(p)
+
+np.argmax(p)
+
+t = np.array([0, 0, 1])
+net.loss(x, t)
+
+
+def f(w):
+    return net.loss(x, t)
+
+dw = numerical_gradient(f, net.w)
+
+print(dw)
+
+
