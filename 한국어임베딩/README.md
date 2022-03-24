@@ -12,6 +12,6 @@
 
 [3장link]: https://ok-lab.tistory.com/141?category=922126 "1장입니다"
 
-[4장][4장link] : 다양한 단어 수준 임베딩 기법(NPLM, Word2Vec, FastText 등)을 다룹니다.
+[4-1장][4-1장link] : 다양한 단어 수준 임베딩 기법들 중 확률 기반 언어모델인 NPLM, Word2Vec, FastText에 대해서 다룹니다.
 
-[4장link]: https://ok-lab.tistory.com/158?category=922126 "1장입니다"
+[4-1장link]: https://ok-lab.tistory.com/158?category=922126 "1장입니다"
