@@ -19,3 +19,7 @@
 [4-2장][4-2장link] : 단어 수준 임베딩 기법들 중 행렬 분해 기반 언어모델인 LSA, GloVe, Swivel에 대해서 다룹니다.
 
 [4-2장link]: https://ok-lab.tistory.com/158?category=922126 "4장입니다"
+
+[4-3장][4-3장link] : 단어 수준 임베딩을 문장 수준 임베딩으로 변환하는 가중 임베딩에 대해서 다룹니다. 
+
+[4-3장link]: https://ok-lab.tistory.com/160 "4장입니다"
