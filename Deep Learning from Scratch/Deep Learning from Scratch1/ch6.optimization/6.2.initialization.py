@@ -1,11 +1,41 @@
-import sys, os 
-sys.path.append('..')
+# weight decay
 
 import numpy as np 
+import matplotlib.pyplot as plt
+from common.util import shuffle_dataset 
+from dataset.mnist import load_mnist
 from common.functions import *
 from common.layers import *
+from common.util import *
 from common.gradient import numerical_gradient 
 from collections import OrderedDict 
+from common.multi_layer_net import *
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+x = np.random.randn(1000, 100)
+node_num = 100 
+hidden_layer_size = 5 
+activations = {}
+
+for i in range(hidden_layer_size):
+    if i != 0:
+        x = activations[i-1]
+        
+    # w = np.random.randn(node_num, node_num) * 1 
+    w = np.random.randn(node_num, node_num) * 0.01
+    a = np.dot(x, w)
+    z = sigmoid(a)
+    activations[i] = z
+
+
+
+for i, a in activations.items():
+    plt.subplot(1, len(activations), i+1)
+    plt.title(str(i+1) + '-layer')
+    plt.hist(a.flatten(), 30, range = (0, 1))
+plt.show()
 
 class TwoLayerNet:
     def __init__(self, input_size, hidden_size, output_size, weight_init_std = 0.01):
@@ -74,68 +104,79 @@ class TwoLayerNet:
         grads['b2'] = self.layers['Affine2'].db
         
         return grads 
-    
-    
-# gradient check 
-import sys, os 
-sys.path.append('..')
 
-import numpy as np 
-from dataset.mnist import load_mnist
+class SGD:
+    def __init__(self, lr=0.01):
+        self.lr = lr 
+        
+    def update(self, params, grads):
+        for key in params.keys():
+            params[key] -= self.lr * grads[key]
+            
+node_num = 100
+w = np.random.randn(node_num, node_num) / np.sqrt(node_num)
+
+
 
 (x_train, y_train), (x_test, y_test) = load_mnist(normalize=True, one_hot_label=True)
 
-network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
-x_batch = x_train[:3]
-y_batch = y_train[:3]
+x_train = x_train[:300]
+y_train = y_train[:300]
 
+network = MultiLayerNet(input_size = 784, hidden_size_list = [100, 100, 100, 100, 100, 100], output_size = 10)
+optimizer = SGD(lr=0.01)
 
-grad_numerical = network.numerical_gradient(x_batch, y_batch)
-
-grad_backprop = network.gradient(x_batch, y_batch)
-
-
-for key in grad_numerical.keys():
-    diff = np.average( np.abs(grad_backprop[key] - grad_numerical[key]) )
-    print(key + ":" + str(diff))
-    
-
-
-
-
-# 구현하기 
-network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
- 
-iters_num = 10000
+max_epochs = 201 
 train_size = x_train.shape[0]
-batch_size =100 
-lr = 0.1
+batch_size = 100 
 
 train_loss_list = []
 train_acc_list = []
 test_acc_list = []
 
 iter_per_epoch = max(train_size / batch_size, 1)
+epoch_cnt = 0
 
-
-for i in range(iters_num):
+for i in range(1000000):
     batch_mask = np.random.choice(train_size, batch_size)
     x_batch = x_train[batch_mask]
     y_batch = y_train[batch_mask]
     
-    grad = network.gradient(x_batch, y_batch)
-    
-    for key in ('W1', 'b1', 'W2', 'b2'):
-        network.params[key] -= lr * grad[key]
-        
-    loss = network.loss(x_batch, y_batch)
-    train_loss_list.append(loss)
-    
+    grads = network.gradient(x_batch, y_batch)
+    optimizer.update(network.params, grads)
     
     if i % iter_per_epoch == 0 :
         train_acc = network.accuracy(x_train, y_train)
         test_acc = network.accuracy(x_test, y_test)
-        
         train_acc_list.append(train_acc)
         test_acc_list.append(test_acc)
-        print(train_acc, test_acc)
+        
+        epoch_cnt += 1
+        if epoch_cnt >= max_epochs:
+            break
+        
+
+class Dropout:
+    def __init__(self, dropout_ratio=0.5):
+        self.dropout_ratio = dropout_ratio 
+        self.mask = None 
+    
+    def forward(self, x, train_flg = True):
+        if train_flg:
+            self.mask = np.random.randn(*x.shape) > self.dropout_ratio 
+
+(x_train, y_train), (x_test, y_test) = load_mnist()
+
+x_train, y_train = shuffle_dataset(x_train, y_train)
+
+validation_rate = 0.20 
+validation_num = int(x_train.shape[0] * validation_rate)
+
+x_val = x_train[:validation_num]
+y_val = y_train[:validation_num]
+x_train = x_train[validation_num:]
+y_train = y_train[validation_num:]
+
+weight_decay = 10 ** np.random.uniform(-8, -4)
+lr = 10 ** np.random.uniform(-6, -2)
+

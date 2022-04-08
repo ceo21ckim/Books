@@ -6,6 +6,7 @@ from common.functions import *
 from common.layers import *
 from common.gradient import numerical_gradient 
 from collections import OrderedDict 
+from dataset.mnist import load_mnist
 
 class TwoLayerNet:
     def __init__(self, input_size, hidden_size, output_size, weight_init_std = 0.01):
@@ -75,67 +76,47 @@ class TwoLayerNet:
         
         return grads 
     
-    
-# gradient check 
-import sys, os 
-sys.path.append('..')
-
-import numpy as np 
-from dataset.mnist import load_mnist
-
-(x_train, y_train), (x_test, y_test) = load_mnist(normalize=True, one_hot_label=True)
-
-network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
-x_batch = x_train[:3]
-y_batch = y_train[:3]
-
-
-grad_numerical = network.numerical_gradient(x_batch, y_batch)
-
-grad_backprop = network.gradient(x_batch, y_batch)
-
-
-for key in grad_numerical.keys():
-    diff = np.average( np.abs(grad_backprop[key] - grad_numerical[key]) )
-    print(key + ":" + str(diff))
-    
-
-
-
-
-# 구현하기 
-network = TwoLayerNet(input_size=784, hidden_size=50, output_size=10)
- 
-iters_num = 10000
-train_size = x_train.shape[0]
-batch_size =100 
-lr = 0.1
-
-train_loss_list = []
-train_acc_list = []
-test_acc_list = []
-
-iter_per_epoch = max(train_size / batch_size, 1)
-
-
-for i in range(iters_num):
-    batch_mask = np.random.choice(train_size, batch_size)
-    x_batch = x_train[batch_mask]
-    y_batch = y_train[batch_mask]
-    
-    grad = network.gradient(x_batch, y_batch)
-    
-    for key in ('W1', 'b1', 'W2', 'b2'):
-        network.params[key] -= lr * grad[key]
+class SGD:
+    def __init__(self, lr=0.01):
+        self.lr = lr 
         
-    loss = network.loss(x_batch, y_batch)
-    train_loss_list.append(loss)
-    
-    
-    if i % iter_per_epoch == 0 :
-        train_acc = network.accuracy(x_train, y_train)
-        test_acc = network.accuracy(x_test, y_test)
+    def update(self, params, grads):
+        for key in params.key():
+            params[key] -= self.lr * grads[key]
+            
+
+class Momentum:
+    def __init__(self, lr=0.01, momentum=0.9):
+        self.lr = lr 
+        self.momentum = momentum 
+        self.v = None 
         
-        train_acc_list.append(train_acc)
-        test_acc_list.append(test_acc)
-        print(train_acc, test_acc)
+    def update(self, params, grads):
+        if self.v is None:
+            self.v = {}
+            for key, val in params.items():
+                self.v[key] = np.zeros_like(val)
+                
+        for key in params.keys():
+            self.v[key] = self.momentum * self.v[key] - self.lr * grads[key]
+            params[key] += self.v[key]
+
+
+
+class AdaGrad:
+    def __init__(self, lr=0.01):
+        self.lr = lr 
+        self.h = None 
+        
+    def update(self, params, grads):
+        if self.h is None:
+            self.h = {}
+        
+            for key, val in params.items():
+                self.h[key] = np.zeros_like(val)
+                
+        for key in params.keys():
+            self.h[key] += grads[key] * grads[key]
+            params[key] -= self.lr * grads[key] / (np.sqrt(self.h[key]) + 1e-7)
+
+
